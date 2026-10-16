@@ -1,9 +1,13 @@
 #include <iostream>
 
-using namespace std;
+int main(int argc, char* argv[]){
 
-int main(){
-    cout << "Portscanner v 0.1.0" << "\n";
+    std::cout << "Portscanner v0.1.0" << '\n';
+    std::cout << "аргументов: " << argc << '\n';
+
+    for(int i = 0; i < argc; i++){
+        std::cout << "argv[" << i << "] = " << argv[i] << '\n';
+    }
 
     return 0;
 }
