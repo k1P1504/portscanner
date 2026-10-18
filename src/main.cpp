@@ -50,7 +50,9 @@ int main(int argc, char* argv[]){
             std::cout << "Ошибка, начало больше конца" << '\n';
         }
         else{
-            std::cout << "от: " << *left << " до: " << *right << '\n';
+            for(int i = *left; i <= *right; i++){
+                std::cout << "Порт: " << i << '\n';
+            }
         }
     }
     else{
