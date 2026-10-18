@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <charconv>
+#include <vector>
 
 std::optional<std::uint16_t> parse_port(const std::string& text) {
     int value = 0;
@@ -50,9 +51,14 @@ int main(int argc, char* argv[]){
             std::cout << "Ошибка, начало больше конца" << '\n';
         }
         else{
+
+            std::vector<std::uint16_t> ports;
+
             for(int i = *left; i <= *right; i++){
-                std::cout << "Порт: " << i << '\n';
+                ports.push_back(static_cast<std::uint16_t>(i));
             }
+
+            std::cout << "Всего портов:" << ports.size() << '\n';
         }
     }
     else{
