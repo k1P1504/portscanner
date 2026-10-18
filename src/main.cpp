@@ -39,6 +39,24 @@ int main(int argc, char* argv[]){
         else{
             std::cout << "портов нету" << '\n';
         }
+
+    std::string text = argv[1];
+    auto dash = text.find('-');
+    auto left = parse_port(text.substr(0, dash));
+    auto right = parse_port(text.substr(dash + 1));
+
+    if(left && right){
+        if(*left > *right){
+            std::cout << "Ошибка, начало больше конца" << '\n';
+        }
+        else{
+            std::cout << "от: " << *left << " до: " << *right << '\n';
+        }
+    }
+    else{
+        std::cout << "ошибка в диапазоне" << '\n';
+    }
+
     }
 
     return 0;
