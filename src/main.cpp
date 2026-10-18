@@ -4,6 +4,7 @@
 #include <string>
 #include <charconv>
 #include <vector>
+#include <sstream>
 
 std::optional<std::uint16_t> parse_port(const std::string &text)
 {
@@ -58,6 +59,26 @@ std::vector<std::uint16_t> parse_range(const std::string &text)
     }
 }
 
+std::vector<std::uint16_t> parse_list(const std::string& text) {
+    std::vector<std::uint16_t> all;
+
+    std::stringstream tape(text);
+    std::string piece;
+    while (std::getline(tape, piece, ',')) {
+        auto small = parse_range(piece);
+
+        if(small.empty()){
+            return {};
+        }
+        else{
+            for(auto port : small) {
+                all.push_back(port);
+            }
+        }
+    }
+    return all;
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -71,7 +92,7 @@ int main(int argc, char *argv[])
 
     if (argc >= 2)
     {
-        auto ports = parse_range(argv[1]);
+        auto ports = parse_list(argv[1]);
         if (ports.empty())
         {
             std::cout << "Ошибка, неверный диапазон" << '\n';
