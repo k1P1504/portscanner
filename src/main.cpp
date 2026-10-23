@@ -1,18 +1,8 @@
 #include <iostream>
+#include <arpa/inet.h>
 #include "portscanner/ports.hpp"
-#include <sys/socket.h> // socket()
-#include <unistd.h>     // close()
-#include <netinet/in.h> // sockaddr_in, htons
-#include <arpa/inet.h>  // inet_pton
+#include "portscanner/scanner.hpp"
 
-bool is_port_open(sockaddr_in addr, std::uint16_t port)
-{
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    addr.sin_port = htons(port);
-    int result = connect(fd, (sockaddr*)&addr, sizeof(addr));
-    close(fd);
-    return result == 0;
-}
 
 int main(int argc, char *argv[])
 {
