@@ -5,6 +5,15 @@
 #include <netinet/in.h> // sockaddr_in, htons
 #include <arpa/inet.h>  // inet_pton
 
+bool is_port_open(sockaddr_in addr, std::uint16_t port)
+{
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    addr.sin_port = htons(port);
+    int result = connect(fd, (sockaddr*)&addr, sizeof(addr));
+    close(fd);
+    return result == 0;
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -42,18 +51,16 @@ int main(int argc, char *argv[])
         std::cout << "Ошибка: неверный IP-адрес" << '\n';
         return 1;
     }
-    for(auto port : ports)
+        for (auto port : ports)
     {
-        int fd = socket(AF_INET, SOCK_STREAM, 0);
-        addr.sin_port = htons(port);
-
-        int result = connect(fd, (sockaddr*)&addr, sizeof(addr));
-        if (result == 0){
+        if (is_port_open(addr, port))
+        {
             std::cout << "Порт " << port << " открыт" << '\n';
-        } else {
+        }
+        else
+        {
             std::cout << "Порт " << port << " закрыт" << '\n';
         }
-        close(fd);
     }
 
     return 0;
