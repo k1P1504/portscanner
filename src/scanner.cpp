@@ -1,5 +1,5 @@
 #include "portscanner/scanner.hpp"
-
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -24,6 +24,10 @@ bool is_port_open(sockaddr_in addr, std::uint16_t port)
     {
         return false;               // трубку не дали
     }
+
+        timeval timeout{};
+    timeout.tv_sec = 1;                     // ждать 1 секунду
+    setsockopt(sock.fd(), SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 
     addr.sin_port = htons(port);
     int result = connect(sock.fd(), reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
