@@ -34,33 +34,27 @@ int main(int argc, char *argv[])
         std::cout << "Всего портов: " << ports.size() << '\n';
     }
 
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    std::cout << "Номер дескриптора: " << fd << '\n';
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(ports[0]);
-    int ok = inet_pton(AF_INET, argv[1], &addr.sin_addr);
-    if (ok != 1)
+    if (inet_pton(AF_INET, argv[1], &addr.sin_addr) != 1)
     {
         std::cout << "Ошибка: неверный IP-адрес" << '\n';
-        close(fd);
         return 1;
     }
-    else
+    for(auto port : ports)
     {
-        int result = connect(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
+        int fd = socket(AF_INET, SOCK_STREAM, 0);
+        addr.sin_port = htons(port);
 
-        if (result == 0)
-        {
-            std::cout << "Порт " << ports[0] << " открыт" << '\n';
+        int result = connect(fd, (sockaddr*)&addr, sizeof(addr));
+        if (result == 0){
+            std::cout << "Порт " << port << " открыт" << '\n';
+        } else {
+            std::cout << "Порт " << port << " закрыт" << '\n';
         }
-        else
-        {
-            std::cout << "Порт " << ports[0] << " закрыт" << '\n';
-        }
+        close(fd);
     }
 
-    close(fd);
     return 0;
 }
