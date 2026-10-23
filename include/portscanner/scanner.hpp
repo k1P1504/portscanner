@@ -1,6 +1,8 @@
 #pragma once
-
+#include <cerrno>
 #include <cstdint>
 #include <netinet/in.h>
 
-bool is_port_open(sockaddr_in addr, std::uint16_t port);
+enum class PortState { Open, Closed, Filtered };
+
+PortState scan_port(sockaddr_in addr, std::uint16_t port);

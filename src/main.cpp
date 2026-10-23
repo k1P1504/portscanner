@@ -43,13 +43,18 @@ int main(int argc, char *argv[])
     }
         for (auto port : ports)
     {
-        if (is_port_open(addr, port))
+        auto state = scan_port(addr, port);
+        if (state == PortState::Open)
         {
             std::cout << "Порт " << port << " открыт" << '\n';
         }
-        else
+        else if (state == PortState::Closed)
         {
             std::cout << "Порт " << port << " закрыт" << '\n';
+        }
+        else
+        {
+            std::cout << "Порт " << port << " фильтруется" << '\n';
         }
     }
 

@@ -17,12 +17,12 @@ class Socket{
     int fd_;
 };
 
-bool is_port_open(sockaddr_in addr, std::uint16_t port)
+PortState scan_port(sockaddr_in addr, std::uint16_t port)
 {
     Socket sock;                    // взяли трубку
     if (sock.fd() < 0)
     {
-        return false;               // трубку не дали
+        return PortState::Closed;               // трубку не дали
     }
 
         timeval timeout{};
@@ -31,5 +31,19 @@ bool is_port_open(sockaddr_in addr, std::uint16_t port)
 
     addr.sin_port = htons(port);
     int result = connect(sock.fd(), reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
-    return result == 0;
+    if (result == 0)
+    {
+        return PortState::Open;
+    }
+    else
+    {
+        if (errno == ECONNREFUSED)
+        {
+            return PortState::Closed;
+        }
+        else
+        {
+            return PortState::Filtered;
+        }
+    }
 }                                   // ← тут трубка кладётся САМА
