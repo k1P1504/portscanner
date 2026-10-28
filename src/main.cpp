@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include "portscanner/ports.hpp"
 #include "portscanner/scanner.hpp"
+#include <thread>
 
 int main(int argc, char *argv[])
 {
@@ -41,9 +42,22 @@ int main(int argc, char *argv[])
     }
     std::vector<PortState> results(ports.size());
 
-    for (std::size_t i = 0; i < ports.size(); ++i)
+    const std::size_t workers = 50;   // сколько почтальонов
+    std::vector<std::thread> threads; // список почтальонов
+
+    for (std::size_t w = 0; w < workers; w++) // нанимаем по одному
     {
-        results[i] = scan_port(addr, ports[i]);
+        threads.emplace_back([&, w]() { // записка с заданием:
+            for (std::size_t i = w; i < ports.size(); i += workers)
+            {
+                results[i] = scan_port(addr, ports[i]); // свои двери: w, w+50, w+100...
+            }
+        });
+    }
+
+    for (auto &t : threads) // ждём, пока все вернутся
+    {
+        t.join();
     }
 
     for (std::size_t i = 0; i < ports.size(); ++i)
