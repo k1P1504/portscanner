@@ -3,7 +3,6 @@
 #include "portscanner/ports.hpp"
 #include "portscanner/scanner.hpp"
 
-
 int main(int argc, char *argv[])
 {
 
@@ -33,7 +32,6 @@ int main(int argc, char *argv[])
         std::cout << "Всего портов: " << ports.size() << '\n';
     }
 
-
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     if (inet_pton(AF_INET, argv[1], &addr.sin_addr) != 1)
@@ -41,20 +39,26 @@ int main(int argc, char *argv[])
         std::cout << "Ошибка: неверный IP-адрес" << '\n';
         return 1;
     }
-        for (auto port : ports)
+    std::vector<PortState> results(ports.size());
+
+    for (std::size_t i = 0; i < ports.size(); ++i)
     {
-        auto state = scan_port(addr, port);
-        if (state == PortState::Open)
+        results[i] = scan_port(addr, ports[i]);
+    }
+
+    for (std::size_t i = 0; i < ports.size(); ++i)
+    {
+        switch (results[i])
         {
-            std::cout << "Порт " << port << " открыт" << '\n';
-        }
-        else if (state == PortState::Closed)
-        {
-            std::cout << "Порт " << port << " закрыт" << '\n';
-        }
-        else
-        {
-            std::cout << "Порт " << port << " фильтруется" << '\n';
+        case PortState::Open:
+            std::cout << "Порт: " << ports[i] << " | Состояние: Открыт" << '\n';
+            break;
+        case PortState::Closed:
+            std::cout << "Порт: " << ports[i] << " | Состояние: Закрыт" << '\n';
+            break;
+        case PortState::Filtered:
+            std::cout << "Порт: " << ports[i] << " | Состояние: Фильтруется" << '\n';
+            break;
         }
     }
 
