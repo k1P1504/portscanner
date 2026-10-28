@@ -64,8 +64,16 @@ int main(int argc, char *argv[])
     {
         switch (results[i])
         {
-        case PortState::Open:
-            std::cout << "Порт: " << ports[i] << " | Состояние: Открыт" << '\n';
+                case PortState::Open:
+            std::cout << "Порт: " << ports[i] << " | Состояние: Открыт";
+            {
+                std::string banner = grab_banner(addr, ports[i]);
+                if (!banner.empty())
+                {
+                    std::cout << " | " << banner;
+                }
+            }
+            std::cout << '\n';
             break;
         case PortState::Closed:
             std::cout << "Порт: " << ports[i] << " | Состояние: Закрыт" << '\n';
