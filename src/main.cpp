@@ -3,6 +3,7 @@
 #include "portscanner/ports.hpp"
 #include "portscanner/scanner.hpp"
 #include <thread>
+#include "portscanner/syn.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +16,7 @@ int main(int argc, char *argv[])
         std::cout << "Пример: portscanner 127.0.0.1 -p 22,80,8000-8100" << '\n';
         return 1;
     }
-    else if (std::string(argv[2]) != "-p")
+    else if (std::string(argv[2]) != "-p" && std::string(argv[2]) != "-sS")
     {
         std::cout << "Ошибка: неверный аргумент. Используйте -p для указания портов" << '\n';
         return 1;
@@ -41,6 +42,22 @@ int main(int argc, char *argv[])
         return 1;
     }
     std::vector<PortState> results(ports.size());
+
+        if (std::string(argv[2]) == "-sS")
+    {
+        for (auto port : ports)
+        {
+            if (send_syn(addr, port))
+            {
+                std::cout << "SYN отправлен на порт " << port << '\n';
+            }
+            else
+            {
+                std::cout << "Не удалось отправить (нужен sudo?)" << '\n';
+            }
+        }
+        return 0;
+    }
 
     const std::size_t workers = 50;   // сколько почтальонов
     std::vector<std::thread> threads; // список почтальонов
