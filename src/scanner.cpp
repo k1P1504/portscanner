@@ -2,25 +2,7 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
-class Socket
-{
-public:
-    Socket() : fd_(socket(AF_INET, SOCK_STREAM, 0)) {}
-    ~Socket()
-    {
-        if (fd_ >= 0)
-            close(fd_);
-    }
-
-    int fd() const { return fd_; }
-
-    Socket(const Socket &) = delete;
-    Socket &operator=(const Socket &) = delete;
-
-private:
-    int fd_;
-};
+#include "portscanner/socket.hpp"
 
 PortState scan_port(sockaddr_in addr, std::uint16_t port)
 {
