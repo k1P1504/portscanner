@@ -1,6 +1,8 @@
 #pragma once
 
+#include "portscanner/scanner.hpp"
+
 #include <cstdint>
 #include <netinet/in.h>
 
-bool send_syn(sockaddr_in addr, std::uint16_t port);
+PortState syn_scan_port(sockaddr_in addr, std::uint16_t port);

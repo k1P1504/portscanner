@@ -4,6 +4,7 @@
 #include "portscanner/scanner.hpp"
 #include <thread>
 #include "portscanner/syn.hpp"
+#include "portscanner/socket.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -43,20 +44,15 @@ int main(int argc, char *argv[])
     }
     std::vector<PortState> results(ports.size());
 
-        if (std::string(argv[2]) == "-sS")
+    const bool syn_mode = std::string(argv[2]) == "-sS";   // SYN-скан?
+    if (syn_mode)
     {
-        for (auto port : ports)
+        Socket probe(SOCK_RAW, IPPROTO_TCP);                // пробуем взять сырую трубку
+        if (probe.fd() < 0)
         {
-            if (send_syn(addr, port))
-            {
-                std::cout << "SYN отправлен на порт " << port << '\n';
-            }
-            else
-            {
-                std::cout << "Не удалось отправить (нужен sudo?)" << '\n';
-            }
+            std::cout << "Ошибка: для -sS нужен sudo" << '\n';
+            return 1;
         }
-        return 0;
     }
 
     const std::size_t workers = 50;   // сколько почтальонов
@@ -67,7 +63,8 @@ int main(int argc, char *argv[])
         threads.emplace_back([&, w]() { // записка с заданием:
             for (std::size_t i = w; i < ports.size(); i += workers)
             {
-                results[i] = scan_port(addr, ports[i]); // свои двери: w, w+50, w+100...
+                results[i] = syn_mode ? syn_scan_port(addr, ports[i])
+                                      : scan_port(addr, ports[i]); // свои двери: w, w+50, w+100...
             }
         });
     }
@@ -84,7 +81,7 @@ int main(int argc, char *argv[])
                 case PortState::Open:
             std::cout << "Порт: " << ports[i] << " | Состояние: Открыт";
             {
-                std::string banner = grab_banner(addr, ports[i]);
+                std::string banner = syn_mode ? "" : grab_banner(addr, ports[i]);
                 if (!banner.empty())
                 {
                     std::cout << " | " << banner;

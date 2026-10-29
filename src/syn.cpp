@@ -2,7 +2,10 @@
 #include "portscanner/socket.hpp"
 
 #include <arpa/inet.h>
+#include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <sys/time.h>
+#include <chrono>
 #include <cstring>
 
 namespace
@@ -51,12 +54,12 @@ in_addr source_ip_for(sockaddr_in target)
 }
 }
 
-bool send_syn(sockaddr_in addr, std::uint16_t port)
+PortState syn_scan_port(sockaddr_in addr, std::uint16_t port)
 {
     Socket raw(SOCK_RAW, IPPROTO_TCP);             // сырая трубка (нужен sudo)
     if (raw.fd() < 0)
     {
-        return false;
+        return PortState::Filtered;
     }
 
     // заполняем бланк
@@ -84,5 +87,51 @@ bool send_syn(sockaddr_in addr, std::uint16_t port)
     addr.sin_port = 0;
     auto sent = sendto(raw.fd(), &tcp, sizeof(tcp), 0,
                        reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
-    return sent == static_cast<ssize_t>(sizeof(tcp));
+    if (sent != static_cast<ssize_t>(sizeof(tcp)))
+    {
+        return PortState::Filtered;
+    }
+
+    // слушаем ответы не дольше 1 секунды
+    timeval timeout{};
+    timeout.tv_sec = 1;
+    setsockopt(raw.fd(), SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    while (std::chrono::steady_clock::now() < deadline)
+    {
+        std::uint8_t packet[1500];
+        auto n = recv(raw.fd(), packet, sizeof(packet), 0);
+        if (n <= 0)
+        {
+            break;                                          // тишина — время вышло
+        }
+
+        // в начале пакета IP-заголовок, его длина записана в поле ihl
+        auto* ip = reinterpret_cast<const iphdr*>(packet);
+        std::size_t ip_length = ip->ihl * 4;
+        if (static_cast<std::size_t>(n) < ip_length + sizeof(tcphdr))
+        {
+            continue;                                       // слишком короткий
+        }
+        auto* reply = reinterpret_cast<const tcphdr*>(packet + ip_length);
+
+        // это ответ именно нам и именно с этого порта?
+        if (ip->saddr != addr.sin_addr.s_addr ||
+            reply->source != htons(port) ||
+            reply->dest != htons(kSourcePort))
+        {
+            continue;                                       // чужое письмо
+        }
+
+        if (reply->syn && reply->ack)
+        {
+            return PortState::Open;                         // [S.] «давай!»
+        }
+        if (reply->rst)
+        {
+            return PortState::Closed;                       // [R] «уходи!»
+        }
+    }
+    return PortState::Filtered;                             // никто не ответил
 }
